@@ -1,0 +1,35 @@
+from pyo import *
+import numpy
+import random
+import time
+
+SNDS_PATH = "humbackWhaleRecording1.wav"
+SNDS_PATH_2 = "DolphinWhistleRecording1.wav"
+SNDS_PATH_3 = "SeiWhaleRec1.wav"
+SNDS_PATH_4 = "fastBubblesRec.wav"
+
+s = Server(duplex=1, buffersize=1024, winhost='asio', nchnls=2)
+s.boot()
+
+fader = Fader(fadein=4,fadeout=50,dur=300)
+fader_dolphin = Fader(fadein=50, fadeout=50, dur=300)
+fader_dolphin.play()
+fader.play()
+# I commented out sound_player_2 and sound_player_4, which are the dolphin and bubble sounds
+sound_player = SfPlayer(SNDS_PATH, mul=2*fader, loop=True)
+sound_player_2 = SfPlayer(SNDS_PATH_2, mul=0.08*fader_dolphin, loop=True)
+sound_player_3 = SfPlayer(SNDS_PATH_3, loop=True, mul = fader)
+sound_player_4 = SfPlayer(SNDS_PATH_4, loop=False, mul=0.3*fader)
+
+# Metro sends a "trigger" to switch sounds, time is supposed to be how long the sound lasts, poly is how many streams of trigger there are
+met = Metro(time=2, poly=2).play()
+# met is the trigger, choice is the different sounds it goes through
+it = Iter(met, choice=[sound_player, sound_player_2, sound_player_3])
+
+ele = 30
+azi = Sine(0.1).range(0, 360)
+binaural_renderer = Binaural([it, sound_player_4], azimuth=azi, elevation=ele, azispan=0, elespan=0).out()
+
+s.start()
+
+s.gui(locals())
